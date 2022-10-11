@@ -307,7 +307,7 @@ UNITREE_LEGGED_SDK::HighCmd rosMsg2Cmd(const geometry_msgs::Twist::ConstPtr &msg
 
     cmd.head[0] = 0xFE;
     cmd.head[1] = 0xEF;
-    cmd.levelFlag = UNITREE_LEGGED_SDK::HIGHLEVEL;
+    cmd.levelFlag = 0x00; //default UNITREE_LEGGED_SDK::HIGHLEVEL (no move)
     cmd.mode = 0;
     cmd.gaitType = 0;
     cmd.speedLevel = 0;

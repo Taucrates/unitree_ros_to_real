@@ -29,12 +29,12 @@ set(CMAKE_CXX_FLAGS "-O3 -fPIC")
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/unitree_legged_sdk-master/include
+    ${CMAKE_SOURCE_DIR}/unitree_legged_sdk/include
 )
 
 
 
-link_directories(${CMAKE_SOURCE_DIR}/unitree_legged_sdk-master/lib)
+link_directories(${CMAKE_SOURCE_DIR}/unitree_legged_sdk/lib)
 
 
 
@@ -63,3 +63,6 @@ add_executable(twist_sub src/exe/twist_sub.cpp)
 target_link_libraries(twist_sub ${EXTRA_LIBS} ${catkin_LIBRARIES})
 add_dependencies(twist_sub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(firu_start src/exe/firu_start.cpp)
+target_link_libraries(firu_start ${EXTRA_LIBS} ${catkin_LIBRARIES})
+add_dependencies(firu_start ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
