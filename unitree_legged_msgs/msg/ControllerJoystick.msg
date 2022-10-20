@@ -1,0 +1,6 @@
+float32 leftFrontal
+float32 leftLateral
+float32 rightFrontal
+float32 rightLateral
+uint8 stSelRsLs
+uint8 arrowsLetters

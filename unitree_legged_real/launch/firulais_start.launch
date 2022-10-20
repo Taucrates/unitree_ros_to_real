@@ -1,7 +1,39 @@
 <launch>
     <arg name="ctrl_level" default="highlevel"/>
+    <arg name="dog_cameras_enabled" default="false"/>
+    <arg name="publish_odom_tf" default="false"/>
 
-    <node pkg="unitree_legged_real" type="firu_start" name="firulais_start" output="screen" args="$(arg ctrl_level)"/>
+    <node pkg="unitree_legged_real" type="firu_start" name="firulais_start" output="screen" args="$(arg ctrl_level)">
+        <param name="control_level" value="$(arg ctrl_level)"/>
+        <param name="publish_tf" type="bool" value="$(arg publish_odom_tf)" />
+    </node>
 
-    <param name="control_level" value="$(arg ctrl_level)"/>
+    <group if="$(arg dog_cameras_enabled)"> 
+
+        <include file="$(find gscam)/launch/stereo.launch">
+        </include>
+
+         <!-- RVIZ -->    
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find unitree_legged_real)/rviz/firulais_real_cams.rviz" output="log"/>
+		
+	</group>
+
+    <group unless="$(arg dog_cameras_enabled)"> 
+
+         <!-- RVIZ -->    
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find unitree_legged_real)/rviz/firulais_real.rviz" output="log"/>
+		
+	</group>
+    
+
+    <node pkg="firulais_behaviours" type="safety_control_node" name="safety_control_node" output="screen">
+        <remap from="~twist_in" to="cmd_vel_raw"/>
+        <remap from="~twist_out" to="cmd_vel"/>
+        <remap from="~high_state" to="high_state"/>
+        <remap from="~front_range" to="range_front"/>
+        <remap from="~right_range" to="range_right"/>
+        <remap from="~left_range" to="range_left"/>
+    </node>
+
+    
 </launch>

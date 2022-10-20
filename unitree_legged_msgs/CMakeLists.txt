@@ -21,6 +21,8 @@ add_message_files(
   LowState.msg
   HighCmd.msg
   HighState.msg
+  ControllerJoystick.msg
+  Ranges.msg
 )
 
 generate_messages(

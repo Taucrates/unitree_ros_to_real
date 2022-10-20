@@ -3,6 +3,8 @@
 #include <unitree_legged_msgs/HighState.h>
 #include <unitree_legged_msgs/LowCmd.h>
 #include <unitree_legged_msgs/LowState.h>
+#include <unitree_legged_msgs/ControllerJoystick.h>
+#include <unitree_legged_msgs/Ranges.h>
 #include "unitree_legged_sdk/unitree_legged_sdk.h"
 #include "convert.h"
 #include <chrono>
@@ -11,6 +13,8 @@
 
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
+
+#include <tf/transform_broadcaster.h>
 
 string odom_frame = "odom";
 string base_frame = "base_link";
@@ -31,7 +35,7 @@ public:
 public:
     Custom()
         : low_udp(LOWLEVEL),
-          high_udp(8090, "192.168.12.1", 8082, sizeof(HighCmd), sizeof(HighState)) // "192.168.123.161" To control via Ethernet
+          high_udp(8090, "192.168.12.1", 8082, sizeof(HighCmd), sizeof(HighState)) // "192.168.123.161" To control via Ethernet || "192.168.12.1" Via Wi-Fi
     {
         high_udp.InitCmdData(high_cmd);
         low_udp.InitCmdData(low_cmd);
@@ -74,6 +78,8 @@ ros::Subscriber sub_cmd_vel;
 ros::Publisher pub_high;
 ros::Publisher pub_imu;
 ros::Publisher pub_odom;
+ros::Publisher pub_controller;
+ros::Publisher pub_ranges;
 
 long high_state_seq = 0;
 long cmd_vel_count = 0;
@@ -86,8 +92,15 @@ double pos_y_odom = 0.0;
 double yaw = 0.0;
 double first_yaw = 0.0;
 bool first_yaw_read = true;
+bool publish_tf = false;
+    
 
-uint8_t controller[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float getFloat(uint8_t bytes[4]){
+  float f;
+  uint8_t b[4] = {bytes[0], bytes[1], bytes[2], bytes[3]};
+  memcpy(&f, &b, sizeof(f));
+  return f;
+}
 
 void highStateCallback(const ros::TimerEvent& event)
 {   
@@ -141,7 +154,7 @@ void highStateCallback(const ros::TimerEvent& event)
     yaw = - (high_state_ros.imu.rpy[2] - first_yaw);
 
     double vel_x_robot = 0.0;
-    if(sqrt(high_state_ros.velocity[0]*high_state_ros.velocity[0]) > 0.1 && sqrt(high_state_ros.velocity[0]*high_state_ros.velocity[0]) < 2.0)
+    if(sqrt(high_state_ros.velocity[0]*high_state_ros.velocity[0]) > 0.1 && sqrt(high_state_ros.velocity[0]*high_state_ros.velocity[0]) < 3.0)
     {
         if(high_state_ros.velocity[0] > 0.0)
         {
@@ -150,6 +163,12 @@ void highStateCallback(const ros::TimerEvent& event)
             vel_x_robot = 1.3 * high_state_ros.velocity[0];
         }
         
+    } else {
+        if(high_state_ros.velocity[0] < 0.0 && high_state_ros.velocity[0] > -0.05){
+            vel_x_robot = 4.0 * high_state_ros.velocity[0];
+        } else {
+            vel_x_robot = 1.7 * high_state_ros.velocity[0];
+        }
     }
 
     double vel_y_robot = 0.0;
@@ -179,20 +198,70 @@ void highStateCallback(const ros::TimerEvent& event)
     odom_msg.twist.twist.angular.z = high_state_ros.yawSpeed;
 
     pub_odom.publish(odom_msg);
-    
-    // Alarm messages to stop autonomous behavior
-    if(high_state_ros.wirelessRemote[2] != 0 || high_state_ros.wirelessRemote[3] != 0)
-    {
-        printf("Stop autonomous behavior\n");
+
+    if(publish_tf){
+        static tf::TransformBroadcaster br;
+
+        tf::Transform transform;
+        transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, odom_msg.pose.pose.position.z));
+        tf::Quaternion q;
+        q.setRPY(high_state_ros.imu.rpy[0], high_state_ros.imu.rpy[1], -yaw);
+        transform.setRotation(q);
+
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, base_frame));
     }
 
-    /*printf("\n( ");
-    for(uint8_t i = 0 ; i < 10 ; i++)
+    // Publish Joysticks Controller
+
+    unitree_legged_msgs::ControllerJoystick controller;
+    
+    // printf("\n( ");
+    uint8_t aux_controller[4];
+    
+    for(uint8_t i = 0 ; i < 4 ; i++)
     {
-        controller[i] = high_state_ros.wirelessRemote[i+2];
-        printf("%d, ", controller[i]);
+        aux_controller[i] = high_state_ros.wirelessRemote[i+20];
+        //printf("%d, ", controller.leftFrontal[i]);
     }
-    printf(")\n");*/
+    //printf(")\n");
+    controller.leftFrontal = getFloat(aux_controller);
+
+    for(uint8_t i = 0 ; i < 4 ; i++)
+    {
+        aux_controller[i] = high_state_ros.wirelessRemote[i+4];
+        //printf("%d, ", controller.leftLateral[i]);
+    }
+    //printf(")\n");
+    controller.leftLateral = getFloat(aux_controller);
+
+    for(uint8_t i = 0 ; i < 4 ; i++)
+    {
+        aux_controller[i] = high_state_ros.wirelessRemote[i+12];
+        //printf("%d, ", controller.rightFrontal[i]);
+    }
+    //printf(")\n");
+    controller.rightFrontal = getFloat(aux_controller);
+
+    for(uint8_t i = 0 ; i < 4 ; i++)
+    {
+        aux_controller[i] = high_state_ros.wirelessRemote[i+8];
+        //printf("%d, ", controller.rightLateral[i]);
+    }
+    //printf(")\n");
+    controller.rightLateral = getFloat(aux_controller);
+
+    controller.stSelRsLs = high_state_ros.wirelessRemote[2];
+    controller.arrowsLetters = high_state_ros.wirelessRemote[3];
+
+    pub_controller.publish(controller);
+
+    // Publish Ultra Sound Ranges
+    unitree_legged_msgs::Ranges ranges;
+    ranges.left = high_state_ros.rangeObstacle[1];
+    ranges.front = high_state_ros.rangeObstacle[0];
+    ranges.right = high_state_ros.rangeObstacle[2];
+
+    pub_ranges.publish(ranges);
 
     // Publish high_state message
 
@@ -228,12 +297,18 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "twist_sub");
 
     ros::NodeHandle nh;
+    ros::NodeHandle nh_private("~");
 
     ros::Timer timer = nh.createTimer(ros::Duration(0.01), highStateCallback); //100Hz
+
+    nh_private.param<bool>("publish_tf", publish_tf, false);
+    //ROS_INFO("Publish_odom_tf: %s", publish_tf ? "true" : "false");
 
     pub_high = nh.advertise<unitree_legged_msgs::HighState>("high_state", 1);
     pub_imu = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
     pub_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
+    pub_controller = nh.advertise<unitree_legged_msgs::ControllerJoystick>("controller", 1);
+    pub_ranges = nh.advertise<unitree_legged_msgs::Ranges>("ranges", 1);
 
     sub_cmd_vel = nh.subscribe("cmd_vel", 1, cmdVelCallback);
 
