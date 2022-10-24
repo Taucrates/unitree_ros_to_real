@@ -27,7 +27,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -60,6 +60,8 @@ Visualization Manager:
         All Enabled: false
         base_link:
           Value: true
+        laser:
+          Value: true
         odom:
           Value: true
       Marker Alpha: 1
@@ -71,7 +73,8 @@ Visualization Manager:
       Tree:
         odom:
           base_link:
-            {}
+            laser:
+              {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -327,6 +330,34 @@ Visualization Manager:
           Value: true
       Enabled: false
       Name: PointCloud
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/LaserScan
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: LaserScan
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic: /scan
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -371,9 +402,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.3197963237762451
+      Pitch: 0.6547970175743103
       Target Frame: <Fixed Frame>
-      Yaw: 3.081754207611084
+      Yaw: 3.1817526817321777
     Saved: ~
 Window Geometry:
   Displays:
