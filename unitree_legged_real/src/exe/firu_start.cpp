@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 
     pub_high = nh.advertise<unitree_legged_msgs::HighState>("high_state", 1);
     pub_imu = nh.advertise<sensor_msgs::Imu>("imu/data", 1);
-    pub_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
+    pub_odom = nh.advertise<nav_msgs::Odometry>("dog_odom", 1);
     pub_controller = nh.advertise<unitree_legged_msgs::ControllerJoystick>("controller", 1);
     pub_ranges = nh.advertise<unitree_legged_msgs::Ranges>("ranges", 1);
 
