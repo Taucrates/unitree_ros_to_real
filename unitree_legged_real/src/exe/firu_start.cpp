@@ -93,8 +93,8 @@ double pos_y_odom = 0.0;
 double yaw = 0.0;
 double first_yaw = 0.0;
 bool first_yaw_read = true;
-bool publish_tf = false;
-    
+bool publish_odom_tf = false;
+bool publish_footprint_tf = true;
 
 float getFloat(uint8_t bytes[4]){
   float f;
@@ -200,7 +200,7 @@ void highStateCallback(const ros::TimerEvent& event)
 
     pub_odom.publish(odom_msg);
 
-    if(publish_tf){
+    if(publish_odom_tf){
 
         // TF odom -> base_footprint
         static tf::TransformBroadcaster br;
@@ -212,7 +212,9 @@ void highStateCallback(const ros::TimerEvent& event)
         transform.setRotation(q);
 
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, footprint_frame));
+    }
 
+    if(publish_footprint_tf){
         // TF base_footprint --> base_link
         static tf::TransformBroadcaster br_2;
 
