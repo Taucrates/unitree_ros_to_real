@@ -17,6 +17,7 @@
 #include <tf/transform_broadcaster.h>
 
 string odom_frame = "odom";
+string footprint_frame = "base_footprint";
 string base_frame = "base_link";
 
 using namespace UNITREE_LEGGED_SDK;
@@ -200,15 +201,28 @@ void highStateCallback(const ros::TimerEvent& event)
     pub_odom.publish(odom_msg);
 
     if(publish_tf){
+
+        // TF odom -> base_footprint
         static tf::TransformBroadcaster br;
 
         tf::Transform transform;
-        transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, odom_msg.pose.pose.position.z));
+        transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, 0.0));
         tf::Quaternion q;
-        q.setRPY(high_state_ros.imu.rpy[0], high_state_ros.imu.rpy[1], -yaw);
+        q.setRPY(0.0, 0.0, -yaw);
         transform.setRotation(q);
 
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, base_frame));
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, footprint_frame));
+
+        // TF base_footprint --> base_link
+        static tf::TransformBroadcaster br_2;
+
+        tf::Transform transform_2;
+        transform_2.setOrigin(tf::Vector3(0.0, 0.0, odom_msg.pose.pose.position.z));
+        tf::Quaternion q_2;
+        q_2.setRPY(high_state_ros.imu.rpy[0], high_state_ros.imu.rpy[1], 0.0);
+        transform.setRotation(q_2);
+
+        br_2.sendTransform(tf::StampedTransform(transform_2, ros::Time::now(), footprint_frame, base_frame));
     }
 
     // Publish Joysticks Controller
