@@ -94,7 +94,7 @@ double yaw = 0.0;
 double first_yaw = 0.0;
 bool first_yaw_read = true;
 bool publish_odom_tf = false;
-bool publish_footprint_tf = true;
+bool publish_footprint_tf = false;
 
 float getFloat(uint8_t bytes[4]){
   float f;
@@ -318,7 +318,7 @@ int main(int argc, char **argv)
     ros::Timer timer = nh.createTimer(ros::Duration(0.01), highStateCallback); //100Hz
 
     nh_private.param<bool>("publish_odom_tf", publish_odom_tf, false);
-    nh_private.param<bool>("publish_footprint_tf", publish_footprint_tf, true);
+    nh_private.param<bool>("publish_footprint_tf", publish_footprint_tf, false);
     //ROS_INFO("Publish_odom_tf: %s", publish_tf ? "true" : "false");
 
     pub_high = nh.advertise<unitree_legged_msgs::HighState>("high_state", 1);
