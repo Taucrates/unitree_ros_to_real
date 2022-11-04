@@ -222,7 +222,7 @@ void highStateCallback(const ros::TimerEvent& event)
         transform_2.setOrigin(tf::Vector3(0.0, 0.0, odom_msg.pose.pose.position.z));
         tf::Quaternion q_2;
         q_2.setRPY(high_state_ros.imu.rpy[0], high_state_ros.imu.rpy[1], 0.0);
-        transform.setRotation(q_2);
+        transform_2.setRotation(q_2);
 
         br_2.sendTransform(tf::StampedTransform(transform_2, ros::Time::now(), footprint_frame, base_frame));
     }
@@ -317,7 +317,8 @@ int main(int argc, char **argv)
 
     ros::Timer timer = nh.createTimer(ros::Duration(0.01), highStateCallback); //100Hz
 
-    nh_private.param<bool>("publish_tf", publish_tf, false);
+    nh_private.param<bool>("publish_odom_tf", publish_odom_tf, false);
+    nh_private.param<bool>("publish_footprint_tf", publish_footprint_tf, true);
     //ROS_INFO("Publish_odom_tf: %s", publish_tf ? "true" : "false");
 
     pub_high = nh.advertise<unitree_legged_msgs::HighState>("high_state", 1);
