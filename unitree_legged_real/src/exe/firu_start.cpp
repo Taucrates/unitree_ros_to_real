@@ -217,15 +217,15 @@ void highStateCallback(const ros::TimerEvent& event)
     if(publish_footprint_tf && !publish_odom_tf){
 
         // TF odom -> base_footprint
-        static tf::TransformBroadcaster br;
+        // static tf::TransformBroadcaster br;
 
-        tf::Transform transform;
-        transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, 0.0));
-        tf::Quaternion q;
-        q.setRPY(0.0, 0.0, -yaw);
-        transform.setRotation(q);
+        // tf::Transform transform;
+        // transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, 0.0));
+        // tf::Quaternion q;
+        // q.setRPY(0.0, 0.0, -yaw);
+        // transform.setRotation(q);
 
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, footprint_frame));
+        // br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, footprint_frame));
 
         // TF base_footprint --> base_link
         static tf::TransformBroadcaster br_2;
