@@ -206,15 +206,27 @@ void highStateCallback(const ros::TimerEvent& event)
         static tf::TransformBroadcaster br;
 
         tf::Transform transform;
+        transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, odom_msg.pose.pose.position.z));
+        tf::Quaternion q;
+        q.setRPY(high_state_ros.imu.rpy[0], high_state_ros.imu.rpy[1], -yaw);
+        transform.setRotation(q);
+
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, base_frame));
+    }
+
+    if(publish_footprint_tf && !publish_odom_tf){
+
+        // TF odom -> base_footprint
+        static tf::TransformBroadcaster br;
+
+        tf::Transform transform;
         transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, 0.0));
         tf::Quaternion q;
         q.setRPY(0.0, 0.0, -yaw);
         transform.setRotation(q);
 
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, footprint_frame));
-    }
 
-    if(publish_footprint_tf){
         // TF base_footprint --> base_link
         static tf::TransformBroadcaster br_2;
 
