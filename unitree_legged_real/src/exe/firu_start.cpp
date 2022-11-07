@@ -123,7 +123,7 @@ void highStateCallback(const ros::TimerEvent& event)
 
     imu_msg.header.seq = high_state_seq;
     imu_msg.header.stamp = actual_time;
-    imu_msg.header.frame_id = footprint_frame;
+    imu_msg.header.frame_id = base_frame;
 
     imu_msg.orientation.x = high_state_ros.imu.quaternion[0];
     imu_msg.orientation.y = high_state_ros.imu.quaternion[1];
