@@ -30,13 +30,18 @@ set(CMAKE_CXX_FLAGS "-O3 -fPIC")
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/unitree_legged_sdk/include
+    # With catkin_make:
+    # ${CMAKE_SOURCE_DIR}/unitree_legged_sdk/include
+    # With catkin build:
+    /home/srv/ROS/noetic/firulais_ws/src/unitree_legged_sdk/include
 )
 
 
 
-link_directories(${CMAKE_SOURCE_DIR}/unitree_legged_sdk/lib)
-
+# With catkin_make:
+# link_directories(${CMAKE_SOURCE_DIR}/unitree_legged_sdk/lib)
+# With catkin build:
+link_directories(/home/srv/ROS/noetic/firulais_ws/src/unitree_legged_sdk/lib)
 
 
 
@@ -67,3 +72,7 @@ add_dependencies(twist_sub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED
 add_executable(firu_start src/exe/firu_start.cpp)
 target_link_libraries(firu_start ${EXTRA_LIBS} ${catkin_LIBRARIES})
 add_dependencies(firu_start ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(tf_generator src/exe/new_tree.cpp)
+target_link_libraries(tf_generator ${EXTRA_LIBS} ${catkin_LIBRARIES})
+add_dependencies(tf_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

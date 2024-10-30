@@ -95,6 +95,7 @@ double first_yaw = 0.0;
 bool first_yaw_read = true;
 bool publish_odom_tf = false;
 bool publish_footprint_tf = false;
+bool inverted_bf2bl = false;
 
 float getFloat(uint8_t bytes[4]){
   float f;
@@ -216,27 +217,30 @@ void highStateCallback(const ros::TimerEvent& event)
 
     if(publish_footprint_tf && !publish_odom_tf){
 
-        // TF odom -> base_footprint
-        // static tf::TransformBroadcaster br;
+        
+        if(inverted_bf2bl){
+            // TF base_link --> base_footprint
+            static tf::TransformBroadcaster br_2;
 
-        // tf::Transform transform;
-        // transform.setOrigin(tf::Vector3(odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, 0.0));
-        // tf::Quaternion q;
-        // q.setRPY(0.0, 0.0, -yaw);
-        // transform.setRotation(q);
+            tf::Transform transform_2;
+            transform_2.setOrigin(tf::Vector3(0.0, 0.0, -odom_msg.pose.pose.position.z));
+            tf::Quaternion q_2;
+            q_2.setRPY(-high_state_ros.imu.rpy[0], -high_state_ros.imu.rpy[1], 0.0);
+            transform_2.setRotation(q_2);
 
-        // br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), odom_frame, footprint_frame));
+            br_2.sendTransform(tf::StampedTransform(transform_2, ros::Time::now(), base_frame, footprint_frame));
+        } else {
+            // TF base_footprint --> base_link
+            static tf::TransformBroadcaster br_2;
 
-        // TF base_footprint --> base_link
-        static tf::TransformBroadcaster br_2;
+            tf::Transform transform_2;
+            transform_2.setOrigin(tf::Vector3(0.0, 0.0, odom_msg.pose.pose.position.z));
+            tf::Quaternion q_2;
+            q_2.setRPY(high_state_ros.imu.rpy[0], high_state_ros.imu.rpy[1], 0.0);
+            transform_2.setRotation(q_2);
 
-        tf::Transform transform_2;
-        transform_2.setOrigin(tf::Vector3(0.0, 0.0, odom_msg.pose.pose.position.z));
-        tf::Quaternion q_2;
-        q_2.setRPY(high_state_ros.imu.rpy[0], high_state_ros.imu.rpy[1], 0.0);
-        transform_2.setRotation(q_2);
-
-        br_2.sendTransform(tf::StampedTransform(transform_2, ros::Time::now(), footprint_frame, base_frame));
+            br_2.sendTransform(tf::StampedTransform(transform_2, ros::Time::now(), footprint_frame, base_frame));
+        }
     }
 
     // Publish Joysticks Controller
@@ -331,6 +335,7 @@ int main(int argc, char **argv)
 
     nh_private.param<bool>("publish_odom_tf", publish_odom_tf, false);
     nh_private.param<bool>("publish_footprint_tf", publish_footprint_tf, false);
+    nh_private.param<bool>("inverted_footprint_tf", inverted_bf2bl, false);
     //ROS_INFO("Publish_odom_tf: %s", publish_tf ? "true" : "false");
 
     pub_high = nh.advertise<unitree_legged_msgs::HighState>("high_state", 1);
